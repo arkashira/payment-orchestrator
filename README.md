@@ -1,2 +1,7 @@
-# payment-orchestrator
-axentx product · A transaction monitoring and payment issue resolution platform for financial institutions to streamline payment operations and improve client communication.
+# Payment Orchestrator
+
+A Python project for managing payment orchestrations.
+
+## Installation
+
+To install the project, run the following command:
