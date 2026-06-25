@@ -1,7 +1,14 @@
 # Payment Orchestrator
 
-A Python project for managing payment orchestrations.
+This project provides a payment orchestrator that detects and resolves issues, notifying clients in real-time.
 
-## Installation
+## Usage
 
-To install the project, run the following command:
+1. Create a `PaymentOrchestrator` instance.
+2. Add clients using the `add_client` method.
+3. Detect issues using the `detect_issue` method.
+4. Resolve issues using the `resolve_issue` method.
+
+## Testing
+
+Run the tests using `pytest`.

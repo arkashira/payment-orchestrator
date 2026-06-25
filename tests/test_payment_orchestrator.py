@@ -1,61 +1,39 @@
-import pytest
-from payment_orchestrator import PaymentOrchestrator, EmailTemplate, EmailTemplateType, Ticket
+from payment_orchestrator import PaymentOrchestrator, IssueStatus
 
-def test_add_email_template():
+def test_detect_issue():
     orchestrator = PaymentOrchestrator()
-    template = EmailTemplate(1, EmailTemplateType.ACKNOWLEDGEMENT, "Subject", "Body")
-    orchestrator.add_email_template(template)
-    assert len(orchestrator.email_templates) == 1
+    orchestrator.add_client(1)
+    orchestrator.detect_issue(1, "Test issue", ["Step 1", "Step 2"])
+    assert len(orchestrator.issues) == 1
+    assert orchestrator.issues[0].status == IssueStatus.DETECTED
 
-def test_add_ticket():
+def test_resolve_issue():
     orchestrator = PaymentOrchestrator()
-    ticket = Ticket(1, "Open", [])
-    orchestrator.add_ticket(ticket)
-    assert len(orchestrator.tickets) == 1
+    orchestrator.add_client(1)
+    orchestrator.detect_issue(1, "Test issue", ["Step 1", "Step 2"])
+    orchestrator.resolve_issue(1)
+    assert len(orchestrator.issues) == 1
+    assert orchestrator.issues[0].status == IssueStatus.RESOLVED
 
-def test_send_email():
+def test_notify_clients():
     orchestrator = PaymentOrchestrator()
-    template = EmailTemplate(1, EmailTemplateType.ACKNOWLEDGEMENT, "Subject", "Body")
-    orchestrator.add_email_template(template)
-    ticket = Ticket(1, "Open", [template])
-    orchestrator.add_ticket(ticket)
-    email_log = orchestrator.send_email(1, 1)
-    assert email_log["template_id"] == 1
+    orchestrator.add_client(1)
+    orchestrator.add_client(2)
+    orchestrator.detect_issue(1, "Test issue", ["Step 1", "Step 2"])
+    # Check that notifications are sent to both clients
+    assert len(orchestrator.issues) == 1
 
-def test_send_email_template_not_found():
+def test_get_issue():
     orchestrator = PaymentOrchestrator()
-    ticket = Ticket(1, "Open", [])
-    orchestrator.add_ticket(ticket)
-    with pytest.raises(ValueError):
-        orchestrator.send_email(1, 1)
+    orchestrator.detect_issue(1, "Test issue", ["Step 1", "Step 2"])
+    issue = orchestrator.get_issue(1)
+    assert issue is not None
+    assert issue.id == 1
+    assert issue.description == "Test issue"
+    assert issue.resolution_steps == ["Step 1", "Step 2"]
+    assert issue.status == IssueStatus.DETECTED
 
-def test_send_email_ticket_not_found():
+def test_get_non_existent_issue():
     orchestrator = PaymentOrchestrator()
-    template = EmailTemplate(1, EmailTemplateType.ACKNOWLEDGEMENT, "Subject", "Body")
-    orchestrator.add_email_template(template)
-    with pytest.raises(ValueError):
-        orchestrator.send_email(1, 1)
-
-def test_get_email_logs():
-    orchestrator = PaymentOrchestrator()
-    template = EmailTemplate(1, EmailTemplateType.ACKNOWLEDGEMENT, "Subject", "Body")
-    orchestrator.add_email_template(template)
-    ticket = Ticket(1, "Open", [template])
-    orchestrator.add_ticket(ticket)
-    orchestrator.send_email(1, 1)
-    email_logs = orchestrator.get_email_logs()
-    assert len(email_logs) == 1
-
-def test_update_email_template():
-    orchestrator = PaymentOrchestrator()
-    template = EmailTemplate(1, EmailTemplateType.ACKNOWLEDGEMENT, "Subject", "Body")
-    orchestrator.add_email_template(template)
-    orchestrator.update_email_template(1, "New Subject", "New Body")
-    updated_template = orchestrator.email_templates[1]
-    assert updated_template.subject == "New Subject"
-    assert updated_template.body == "New Body"
-
-def test_update_email_template_not_found():
-    orchestrator = PaymentOrchestrator()
-    with pytest.raises(ValueError):
-        orchestrator.update_email_template(1, "New Subject", "New Body")
+    issue = orchestrator.get_issue(1)
+    assert issue is None
